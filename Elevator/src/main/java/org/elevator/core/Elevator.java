@@ -5,13 +5,34 @@ import org.elevator.models.Direction;
 import org.elevator.models.ElevatorState;
 import org.elevator.panel.InternalPanel;
 
-public class Elevator {
-    int currentFloor;
-    int elevatorId;
-    Direction direction;
-    ElevatorState elevatorState;
+public class Elevator implements Runnable {
+
+    private volatile int currentFloor;
+    private final int elevatorId;
+    private volatile Direction direction;
+    private volatile ElevatorState elevatorState;
     InternalPanel internalPanel;
     ElevatorMovementStrategy movementStrategy;
+    private volatile boolean isRunning;
+    private final Object stateLock = new Object();
+
+
+    @Override
+    public void run() {
+        while (isRunning && !Thread.currentThread().isInterrupted()) {
+            try {
+                synchronized (stateLock) {
+                    if (elevatorState != ElevatorState.MAINTENANCE) {
+                        move();
+                    }
+                }
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
 
     public Elevator(int elevatorId, ElevatorMovementStrategy movementStrategy) {
         this.elevatorId = elevatorId;
@@ -19,6 +40,7 @@ public class Elevator {
         this.currentFloor = 0;
         this.elevatorState = ElevatorState.IDLE;
         this.direction = Direction.UP;
+        this.isRunning = true;
         this.internalPanel = new InternalPanel(this);
     }
 
@@ -35,14 +57,19 @@ public class Elevator {
     }
 
     public void openDoor() {
-        System.out.println("Door is opening for elevator " + elevatorId);
-        elevatorState = ElevatorState.DOOR_OPENING;
+        synchronized (stateLock) {
+            System.out.println("Door is opening for elevator " + elevatorId);
+            elevatorState = ElevatorState.DOOR_OPENING;
+        }
     }
 
     public void closeDoor() {
-        System.out.println("Door is closing for elevator " + elevatorId);
-        elevatorState = ElevatorState.DOOR_OPENING;
+        synchronized (stateLock) {
+            System.out.println("Door is closing for elevator " + elevatorId);
+            elevatorState = ElevatorState.DOOR_CLOSING;
+        }
     }
+
 
     public int getCurrentFloor() {
         return currentFloor;
@@ -74,5 +101,9 @@ public class Elevator {
 
     public InternalPanel getInternalPanel() {
         return internalPanel;
+    }
+
+    public void stop() {
+        isRunning = false;
     }
 }

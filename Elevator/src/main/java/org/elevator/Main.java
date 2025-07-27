@@ -23,6 +23,5 @@ public class Main {
         Floor floor = new Floor(1, controller);
         outdoorPanel1.pressUp();
         elevator.getInternalPanel().pressButton(3);
-        controller.stepAllElevators();
     }
 }

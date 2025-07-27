@@ -1,5 +1,6 @@
 package org.elevator.core.strategy;
 
+import java.util.concurrent.ConcurrentSkipListSet;
 import org.elevator.models.Direction;
 import org.elevator.core.Elevator;
 import org.elevator.models.ElevatorState;
@@ -9,8 +10,8 @@ import java.util.TreeSet;
 
 public class ScanMovementStrategy implements ElevatorMovementStrategy {
 
-    private TreeSet<Integer> upQueue = new TreeSet<>();
-    private TreeSet<Integer> downQueue = new TreeSet<>(Comparator.reverseOrder());
+    private ConcurrentSkipListSet<Integer> upQueue = new ConcurrentSkipListSet<>();
+    private ConcurrentSkipListSet<Integer> downQueue = new ConcurrentSkipListSet<>(Comparator.reverseOrder());
 
     @Override
     public void addExternalRequest(Elevator elevator, int floor) {
